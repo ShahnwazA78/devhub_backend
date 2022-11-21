@@ -58,7 +58,7 @@ async function userLogin(req, res, next) {
     //   userId: userdata._id,
     //   Role: userdata.Role,
     // });
-    console.log(token);
+    // console.log(token);
     return res.status(200).json({ message: "success" });
   } catch (err) {
     console.log("error=>", err);
