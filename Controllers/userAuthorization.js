@@ -7,39 +7,43 @@ const _ = require("lodash");
 const mongoose = require("mongoose");
 const bcrypt = require("bcrypt");
 const baseRepo = require("../Repository/baseRepository");
-const utils = require('../utils/commonFunctions');
+const utils = require("../utils/commonFunctions");
 const ObjectId = mongoose.Types.ObjectId;
 
- 
 module.exports = {
-userLogin
-}
+  userLogin,
+};
 
+async function userLogin(req, res, next) {
+  const body = req.body;
+  if (!body.userName || !body.password) {
+    return res
+      .status(401)
+      .json({ message: "Please Enter Details for Login ", status: 401 });
+  }
 
-
-
-async function userLogin(req,res,next){
-    const body = req.body;
-    if(!body.userName||!body.password){
-      return res.status(400).json({message:"Please Enter Details for Login ",status:400});
-    }
-    
-    try{
-    
-    let userdata = await userMetaModel.findOne({userName:body.userName});
+  try {
+    let userdata = await userMetaModel.findOne({ userName: body.userName });
     // console.log("User =",usermeta);
-    if(!userdata){
-      return res.status(400).json({message:"Incorrect Details",status:400});
+    if (!userdata) {
+      return res
+        .status(402)
+        .json({ message: "Incorrect Details", status: 402 });
     }
-   console.log("Body Pass = ",body.password);
-   console.log("User Pass = ",userdata.userPassword);
+    console.log("Body Pass = ", body.password);
+    console.log("User Pass = ", userdata.userPassword);
 
-    const isPassMatch = await bcrypt.compareSync(body.password,userdata.userPassword);
-    console.log("match",isPassMatch);  
-    if(!isPassMatch){
-      return res.status(400).json({message:"Incorrect Password",status:400});
+    const isPassMatch = await bcrypt.compareSync(
+      body.password,
+      userdata.userPassword
+    );
+    console.log("match", isPassMatch);
+    if (!isPassMatch) {
+      return res
+        .status(403)
+        .json({ message: "Incorrect Password", status: 403 });
     }
-    
+
     // let user = await baseRepo.baseDetail(userModel,{
     //   searchParams:{
     //     userRoleId:ObjectId(userdata._id)
@@ -49,23 +53,17 @@ async function userLogin(req,res,next){
     // if(!user){
     //   return next({message:"Account Not Found",status:400})
     // }
-    
+
     const token = utils.generateJWT({
-      userId:userdata._id,
-       Role:userdata.Role
+      userId: userdata._id,
+      Role: userdata.Role,
     });
     console.log(token);
-    return res.status(200).json({token});
-    
-    
-    
-    
-    
-    }catch(err){
-      console.log("error=>",err);
-      return res.status(400).json({
-        message:err
-      })
-    }
-    }
-    
+    return res.status(200).json({ token });
+  } catch (err) {
+    console.log("error=>", err);
+    return res.status(400).json({
+      message: err,
+    });
+  }
+}

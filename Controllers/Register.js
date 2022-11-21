@@ -9,34 +9,32 @@ const bcrypt = require("bcrypt");
 const { mongoose } = require("mongoose");
 const { ObjectId } = require("mongodb");
 const nodemailer = require("nodemailer");
-//mailgun 
+//mailgun
 const mailgun = require("mailgun-js");
-const DOMAIN = 'sandbox53616e3e6453441ebd344297b4910df4.mailgun.org';
+const DOMAIN = "sandbox53616e3e6453441ebd344297b4910df4.mailgun.org";
 const mg = mailgun({ apiKey: process.env.MAILGUN_APIKEY, domain: DOMAIN });
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 const ITSoftwareModel = require("../Models/ITSoftwareModel");
 
 module.exports = {
-  
   ActivateAccount,
   UniversityRegistration,
-  ITRegistration
+  ITRegistration,
 };
-
 
 async function UniversityRegistration(req, res) {
   const body = req.body;
   const Name = body.UniversityName;
   const Phone = body.UniversityPhone;
   const Role = body.Role;
- 
+
   try {
     const user = await UserMetaModel.findOne({ email: body.email });
     if (user) {
-      console.log("user=>" , user)
+      console.log("user=>", user);
       return res.status(300).json("User Already Exist");
     }
-    const MetaBody = ["email" ];
+    const MetaBody = ["email"];
     const UniversitymodelField = [
       "UniversityName",
       "UniversityPhone",
@@ -60,27 +58,54 @@ async function UniversityRegistration(req, res) {
       "ActivateAwareness",
       "Certification",
       "PanImage",
-      "AadharImage"
+      "AadharImage",
     ];
     console.log("name:", Name);
     console.log("Phone:", Phone);
-    console.log("Phone.slice : " , Phone.slice(0,4));
+    console.log("Phone.slice : ", Phone.slice(0, 4));
     const userName = Name.slice(0, 3) + Phone.slice(0, 3);
-    console.log("UserName : " , userName);
+    console.log("UserName : ", userName);
     const userPassword = Role.slice(0, 3) + Name;
     const salt = await bcrypt.genSalt(10);
     const Secpassword = await bcrypt.hash(userPassword, salt);
 
-    let Phasebody = _.pick(body , MetaBody);
+    let Phasebody = _.pick(body, MetaBody);
     Phasebody.userName = userName;
     Phasebody.userPassword = Secpassword;
     const userMetaDetails = await baseRepo.baseCreate(UserMetaModel, Phasebody);
-
 
     let Phase2body = _.pick(body, UniversitymodelField);
     Phase2body.userMetaId = userMetaDetails._id;
     await baseRepo.baseCreate(UniversityModel, Phase2body);
 
+    let mailTransporter = nodemailer.createTransport({
+      service: "gmail",
+      auth: {
+        user: "sahilrohera2003@gmail.com",
+        pass: "bhwnmaiptoxkgkxx",
+      },
+    });
+
+    let mailDetails = {
+      from: "sahilrohera2003@gmail.com",
+      to: body.email,
+      subject: "Login Credentials of Developer Hub",
+      // text: 'Node.js testing mail for GeeksforGeeks'
+      html: `   <h2> Thank You for registering </h2>
+               <h3>Please Login to the site with the following login credentials</h3>
+               <p>User name : <i>${userName}</i> </p> 
+               <p>password : <i>${userPassword}</i> </p>
+         
+           `,
+    };
+
+    mailTransporter.sendMail(mailDetails, function (err, data) {
+      if (err) {
+        console.log("Error Occurs");
+      } else {
+        console.log("Email sent successfully");
+      }
+    });
 
     // const token = jwt.sign({ Name, Role }, process.env.JWT_ACC_ACTIVATE, { expiresIn: '20m' })
 
@@ -104,7 +129,7 @@ async function UniversityRegistration(req, res) {
     //     message: 'Email has been sent, kindly activate your account'
     //   })
     // });
-    
+
     // const tranporter = nodemailer.createTransport({
     //   service: "gmail",
     //   host: "smtp.gmail.com",
@@ -136,9 +161,6 @@ async function UniversityRegistration(req, res) {
     // });
 
     return res.status(200).json({ message: "success" });
-
-
-
   } catch (err) {
     console.log("Error=>", err);
     return res.status(400).json({ message: err });
@@ -149,11 +171,11 @@ async function ITRegistration(req, res) {
   const Name = body.ITName;
   const Phone = body.ITPhone;
   const Role = body.Role;
- 
+
   try {
     const user = await UserMetaModel.findOne({ email: body.email });
     if (user) {
-      console.log("user=>" , user)
+      console.log("user=>", user);
       return res.status(300).json("User Already Exist");
     }
     const MetaBody = ["email"];
@@ -171,27 +193,25 @@ async function ITRegistration(req, res) {
       "ActivateAwareness",
       "Certification",
       "PanImage",
-      "AadharImage"
+      "AadharImage",
     ];
     console.log("name:", Name);
     console.log("Phone:", Phone);
     // console.log("Phone.slice : " , Phone.slice(0,4));
     const userName = Name.slice(0, 3) + Phone.slice(0, 3);
-    console.log("UserName : " , userName);
+    console.log("UserName : ", userName);
     const userPassword = Role.slice(0, 3) + Name;
     const salt = await bcrypt.genSalt(10);
     const Secpassword = await bcrypt.hash(userPassword, salt);
 
-    let Phasebody = _.pick(body , MetaBody);
+    let Phasebody = _.pick(body, MetaBody);
     Phasebody.userName = userName;
     Phasebody.userPassword = Secpassword;
     const userMetaDetails = await baseRepo.baseCreate(UserMetaModel, Phasebody);
 
-
     let Phase2body = _.pick(body, ITmodelField);
     Phase2body.userMetaId = userMetaDetails._id;
     await baseRepo.baseCreate(ITSoftwareModel, Phase2body);
-
 
     // const token = jwt.sign({ Name, Role }, process.env.JWT_ACC_ACTIVATE, { expiresIn: '20m' })
 
@@ -215,7 +235,7 @@ async function ITRegistration(req, res) {
     //     message: 'Email has been sent, kindly activate your account'
     //   })
     // });
-    
+
     // const tranporter = nodemailer.createTransport({
     //   service: "gmail",
     //   host: "smtp.gmail.com",
@@ -247,22 +267,18 @@ async function ITRegistration(req, res) {
     // });
 
     return res.status(200).json({ message: "success" });
-
-
-
   } catch (err) {
     console.log("Error=>", err);
     return res.status(400).json({ message: err });
   }
 }
 
-
 // async function StudentRegistration(req, res) {
 //   const body = req.body;
 //   const Name = body.name;
 //   const Phone = body.phone;
 //   const Role = body.Role;
- 
+
 //   try {
 //     const user = await RegisterModel.findOne({ emailId: body.email });
 //     if (user) {
@@ -300,11 +316,9 @@ async function ITRegistration(req, res) {
 //     Phasebody.phone = Phone;
 //     const userMetaDetails = await baseRepo.baseCreate(RegisterModel, Phasebody);
 
-
 //     let Phase2body = _.pick(body, UniversitymodelField);
 //     Phase2body.userMetaId = userMetaDetails._id;
 //     await baseRepo.baseCreate(UniversityModel, Phase2body);
-
 
 //     const token = jwt.sign({ Name, email }, process.env.JWT_ACC_ACTIVATE, { expiresIn: '20m' })
 
@@ -328,9 +342,6 @@ async function ITRegistration(req, res) {
 //         message: 'Email has been sent, kindly activate your account'
 //       })
 //     });
-
-
-
 
 //   } catch (err) {
 //     console.log("Error=>", err);
@@ -461,34 +472,34 @@ async function ITRegistration(req, res) {
 //     return res.status(400).json({ message: err });
 //   }
 
-
-
-
 // }
 
-
 async function ActivateAccount(req, res) {
-  const { token } = req.body
+  const { token } = req.body;
 
   if (token) {
-    jwt.verify(token, process.env.JWT_ACC_ACTIVATE, async function (err, decodedToken) {
-
-      if (err) {
-        return res.status(400).json({ error: "Incorrect or Expired Link" })
-      }
-      else {
-        try {
-          const { email } = decodedToken;
-          const user = await RegisterModel.findOne({ email });
-          user.activate = true;
-          await baseRepo.baseCreate(RegisterModel, user);
-          return res.status(200).json({ message: "account activated successfully" })
+    jwt.verify(
+      token,
+      process.env.JWT_ACC_ACTIVATE,
+      async function (err, decodedToken) {
+        if (err) {
+          return res.status(400).json({ error: "Incorrect or Expired Link" });
+        } else {
+          try {
+            const { email } = decodedToken;
+            const user = await RegisterModel.findOne({ email });
+            user.activate = true;
+            await baseRepo.baseCreate(RegisterModel, user);
+            return res
+              .status(200)
+              .json({ message: "account activated successfully" });
+          } catch (error) {
+            return res
+              .status(400)
+              .json({ error: "Error while activating account" });
+          }
         }
-        catch (error) {
-          return res.status(400).json({ error: "Error while activating account" })
-        }
-
       }
-    })
+    );
   }
 }
