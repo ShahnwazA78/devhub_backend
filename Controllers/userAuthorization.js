@@ -54,12 +54,12 @@ async function userLogin(req, res, next) {
     //   return next({message:"Account Not Found",status:400})
     // }
 
-    const token = utils.generateJWT({
-      userId: userdata._id,
-      Role: userdata.Role,
-    });
+    // const token = utils.generateJWT({
+    //   userId: userdata._id,
+    //   Role: userdata.Role,
+    // });
     console.log(token);
-    return res.status(200).json({ token });
+    return res.status(200).json({ message: "success" });
   } catch (err) {
     console.log("error=>", err);
     return res.status(400).json({
